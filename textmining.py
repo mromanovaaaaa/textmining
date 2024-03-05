@@ -1,7 +1,5 @@
 # @author: mromanovaaaaa
 
-# streamlit run "C:\Users\mroma\OneDrive\Рабочий стол\проекты\textmining.py"
-   
 import streamlit as st 
 import codecs #для расшифровки файлов 
 import pandas as pd #для создания датафреймов
@@ -44,6 +42,7 @@ from io import StringIO
 #загрузка файлов
 filetype = st.selectbox('Filetype',['', 'txt', 'pdf'])    
 uploaded_file = st.file_uploader('Upload file', filetype, disabled=not bool(filetype))
+text = None
 
 #обработка pdf
 def convert_pdf_to_txt_file(path):
@@ -107,6 +106,8 @@ if function == 'POS-tagging':
     st.header('POS-tagging')
     
     try:
+        if not text:
+            raise AssertionError
         #обработка текста
         doc = Doc(text)
         doc.segment(segmenter)
@@ -135,13 +136,17 @@ if function == 'POS-tagging':
             df.loc[df['postags'] == tag, 'count'] = value
         #визуализация
         st.bar_chart(data=df[['count', 'postags']], x = 'postags')
-    except:
-        'Upload file'
+    except AssertionError:
+        "Upload file"
+    except Exception:
+        "Oops... Something went wrong. We'll fix it soon"
 
 if function == 'named entity recognition':
     st.header('named entity recognition')
     
     try:
+        if not text:
+            raise AssertionError
         #применение функции
         doc = Doc(text)
         doc.segment(segmenter)
@@ -158,8 +163,10 @@ if function == 'named entity recognition':
             ner.append((doctoken.normal, doctoken.type))
         ner = list(set(ner))
         annotated_text(ner)
-    except:
-        'Upload file'
+    except AssertionError:
+        "Upload file"
+    except Exception:
+        "Oops... Something went wrong. We'll fix it soon"
         
 if function == 'syntactic analysis':
     st.header('syntactic analysis')
@@ -196,6 +203,8 @@ if function == 'syntactic analysis':
 if function == 'key words':
     st.header('key words')
     try:
+        if not text:
+            raise AssertionError
         if text:
             #настройка параметров функции multi-rake
             n = st.number_input('Number of key words', min_value=1, value=10, step=1)
@@ -218,16 +227,22 @@ if function == 'key words':
         
         if lem:
             annotated_text(*list(map(lambda x: (soglasovanie(x[0]), str(x[1])), keywords[0:n])))
+            st.code(', '.join(list(map(lambda x: soglasovanie(x[0]), keywords[0:n]))))
         else:
             annotated_text(*list(map(lambda x: (x[0], str(x[1])), keywords[0:n])))
+            st.code(', '.join(list(map(lambda x: x[0], keywords[0:n]))))
 
-    except:
-        'Upload file'
+    except AssertionError:
+        "Upload file"
+    except Exception:
+        "Oops... Something went wrong. We'll fix it soon"
         
 if function == 'summarization':
     st.header('summarization')
     
     try:
+        if not text:
+            raise AssertionError
         #обработка исключений по длине
         summary = summarize(text, ratio=0.2, language='russian')
         ratio = 0.2
@@ -238,13 +253,15 @@ if function == 'summarization':
         #замена знаков препинания на знаки препинания с пробелом
         for punct in punctuation:
             summary = summary.replace(punct, punct + ' ', summary.count(punct)) 
-        
+            
         #вывод обобщенного текста
         st.write('---')
         st.write(summary)
         st.write('---')
-        st.write('Tap to copy')
+        st.write('Here you can copy the summary')
         st.code(summary)
         st.write('---')
-    except:
-        'Upload file'
+    except AssertionError:
+        "Upload file"
+    except Exception:
+        "Oops... Something went wrong. We'll fix it soon"
